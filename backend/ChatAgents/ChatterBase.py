@@ -112,17 +112,24 @@ Format example:
             
         response = request['choices'][0]['message']['content'] 
         
-        self.ClientUpdator.ReportSuccess("Got response from ChatGPT about topics!") 
+        self.ClientUpdator.ReportSuccess("Got response from ChatGPT about topics!")
+        print(response)
+        keys_string = "" 
+        areas = [] 
         ret = [] 
         responseJson = json.loads(response)  
             
         print("responseJson")
         print(responseJson)
-        list_key = next(iter(responseJson))  
+        list_key = next(iter(responseJson)) 
+        print(f"List key {list_key}")
         
-        for area_dict in responseJson[list_key]:  
-            for key, value in area_dict.items():  
-                ret.append({  key : value}) 
+        for area_dict in responseJson[list_key]:  # Iterate over the list
+            for key, value in area_dict.items(): 
+                print(str(key) + " : " + str(value))
+                areas.append({"subArea":key, "keywords": key + "\n" + value})
+                ret.append({  key : value})
+                keys_string += key + "\n" + value+ "\n" 
                  
         return ret
                
@@ -178,7 +185,7 @@ When you no longer need to search for more information; add TERMINATE at the end
 """,
             llm_config=llm_config_researcher,
         )
-        #When you no longer need to search for more information; add TERMINATE at the end of your message.
+        
         user_proxy = ExtendedUserProxyAgent(
             updater = self.ClientUpdator,
             name="User_proxy",   
@@ -209,5 +216,6 @@ When replying to user remember:
         self.conversation_history.append('Agent: ' + user_proxy.last_message()["content"])
          
         self.ClientUpdator.SendPacket('user feedback required', "Any other questions on your mind?" ) 
+        self.ClientUpdator.ConversationChatResponse("Credits", f"<h5>Information is sourced from:</h5>{self.numbered_credits}")
         
         self.chat_active = False

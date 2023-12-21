@@ -15,9 +15,8 @@ class AgentChatter(ChatterBase):
         researchQuery = ResearchQueryRequest(question, self.ClientUpdator, querySettings) 
         if self.embedd_papers:
             researchQuery.add_from_unprocced_vectordatabase()
-        research_material, credits = researchQuery.query_research() 
+        research_material, credits, self.numbered_credits = researchQuery.query_research() 
        
         self.ClientUpdator.ReportSuccess(f"Request took {round(time.time() - start_time, 1)} seconds")
-        
         return research_material
      

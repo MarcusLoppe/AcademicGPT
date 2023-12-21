@@ -29,8 +29,8 @@ class PaperChatter(ChatterBase):
     
         queryProccesor = PaperQueryProcessor(question, querySettings, self.ClientUpdator) 
         queryProccesor.query_collection(self.QueryContainer, 1) 
-        research_material, credits = queryProccesor.get_results()        
-        self.ClientUpdator.ReportSuccess(f"Request took {round(time.time() - start_time, 1)} seconds")
+        research_material, credits,self.numbered_credits = queryProccesor.get_results()        
+        self.ClientUpdator.ReportSuccess(f"Request took {round(time.time() - start_time, 1)} seconds") 
 
         
         return research_material

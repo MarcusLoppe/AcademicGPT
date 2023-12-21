@@ -71,6 +71,7 @@ class ReferenceManager:
         self.reference_counter = 1
         self.reference_mapping = {}
         self.ids = []
+        self.last_references = ""
 
     def add_document(self, doc: Document):
         self.documents.append(doc)   
@@ -102,12 +103,19 @@ class ReferenceManager:
         return text
         
     def compile_documents(self):
-        self.update_documents()  # Update all documents first
+        self.update_documents()  
         compiled_text = ""
+        complied_references = {}
         for doc in self.documents:  
             compiled_text += doc.startCredit + doc.text + f"\n\nReferences found in the paper {doc.fullCredit_unformated}:\n"
             for ref_num, ref_text in sorted(doc.references.items()):
                 compiled_text += f"[{ref_num}] {ref_text}\n"
-            
+                if doc.fullCredit in complied_references:
+                    complied_references[doc.fullCredit].append(ref_num)
+                else:
+                    complied_references[doc.fullCredit] = [ref_num]
+                     
+        self.last_references = '\n'.join([f'[{", ".join(map(str, values))}] {key}' for key, values in complied_references.items()])
+    
         return compiled_text.strip()
     

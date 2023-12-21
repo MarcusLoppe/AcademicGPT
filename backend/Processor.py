@@ -117,7 +117,7 @@ class PaperQueryProcessor:
         tokenSplit = "\n".join([f"&nbsp;&nbsp;&nbsp;&nbsp;- <b>{key}:</b> {value} tokens." for key, value in self.areas_tokens.items()])
         self.updator.ReportSuccess(f'Returning with {textLength} tokens, token split per area:\n {tokenSplit}')  
         
-        return self.text_manager.compile_documents(), self.text_manager.get_paper_credits()
+        return self.text_manager.compile_documents(), self.text_manager.get_paper_credits(), self.text_manager.last_references
   
  
 def query_vectordatabase(self : PaperQueryProcessor, topic : RequestedTopic):

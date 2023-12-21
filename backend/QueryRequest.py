@@ -21,7 +21,7 @@ class ResearchQueryRequest:
         self.updator.ReportNeutral(f"Getting new research information for the query '{query}', got {len(self.querySettings.Topics)} topics to get information about")
     def query_research(self): 
         collection = None
-        summary = ""
+        summary,numbered_credits = "",""
         credits= []
         if self.querySettings.CollectionProcentage > 0 and len(self.unprocced_research_collection) > 0:
             collection, papers = Storage.get_embeddings_collection(self.unprocced_research_collection.values(),  self.updator)  
@@ -34,7 +34,7 @@ class ResearchQueryRequest:
             if self.querySettings.CollectionProcentage < 100:
                 queryProccesor.query_vectordatabase(1 - self.querySettings.CollectionProcentage / 100) 
             
-            summary,credits = queryProccesor.get_results()
+            summary,credits, numbered_credits = queryProccesor.get_results()
             
         except Exception as e:
             self.updator.ReportFailure(f"Error from query_papers: \n{e}")
@@ -42,7 +42,7 @@ class ResearchQueryRequest:
         if collection is not None and len(collection) > 0:
             Storage.store_embedding_container(collection,  self.updator) 
             
-        return summary, credits    
+        return summary, credits, numbered_credits 
  
     def add_from_paper_collection(self, papers: List[Paper]):
         primaryResult = []

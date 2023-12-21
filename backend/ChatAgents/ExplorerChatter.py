@@ -17,9 +17,9 @@ class ExplorerChatter(ChatterBase):
             querySettings.CollectionProcentage = 50
             researchQuery.add_from_paper_collection(self.papers)
             researchQuery.add_from_unprocced_vectordatabase()
-        research_material, credits = researchQuery.query_research() 
+        research_material, credits, self.numbered_credits = researchQuery.query_research() 
         
-        self.ClientUpdator.ReportSuccess(f"Request took {round(time.time() - start_time, 1)} seconds")
+        self.ClientUpdator.ReportSuccess(f"Request took {round(time.time() - start_time, 1)} seconds")  
         return research_material
     
     def start_research(self, subject, message): 
@@ -40,14 +40,7 @@ class ExplorerChatter(ChatterBase):
      
     def add_heading_tags(self, text):
         pattern_stars = r'\*\*([^*]{1,100})\*\*'
-        text = re.sub(pattern_stars, r'<b>\1</b>', text)
-        
-        #pattern_h5 = r'((?:\d+\.|-)\s+.{1,75}:)\s*\n'
-        #text = re.sub(pattern_h5, r'<h5>\1</h5>', text)
-
-        #pattern_b = r'((?:\d+\.|-)\s+.{1,75}(?<!<h5>.):)(?!<\/h5>)'
-        #text = re.sub(pattern_b, r'<b>\1</b>', text)
-
+        text = re.sub(pattern_stars, r'<b>\1</b>', text) 
         text = text.replace("*", "")
         return text
 
