@@ -1,0 +1,500 @@
+from communication.ClientUpdate import ClientUpdate  
+import openai 
+from agent_request import get_research_informatio2n
+from autogen import config_list_from_json,Agent,oai 
+from ExtenedAgents import ChatMixin,ExtendedAssistantAgent,ExtendedUserGroupChat,ExtendedUserGroupChatManager,ExtendedUserProxyAgent
+ 
+config_list = config_list_from_json(env_or_file="OAI_CONFIG_LIST")
+api_key = "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"
+openai.api_key= api_key   
+
+# What is the limit of data compress?
+class AgentTeam: 
+    ClientUpdator : ClientUpdate 
+    Objective: str
+ 
+    def __init__(self, updater: ClientUpdate):
+        self.ClientUpdator = updater 
+
+    def start_agents(self, message): 
+        self.Objective = message
+        llm_config_content_assistant = {
+            "functions": [
+                    {
+                    "name": "get_research_information",
+                    "description": "search for recent academic information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "search_keywords": {
+                                "type": "string",
+                                "description": "search keyword for academic research titles",
+                            }
+                            #"search_text": {
+                            #    "type": "string",
+                            #    "description": "phrase to be used to search in acedemic database server for information",
+                            #} 
+                        },
+                        "required": ["search_keywords"],
+                    }
+                } 
+            ],
+            "config_list": config_list}    
+        
+        writing_assistant = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="writing_assistant",
+            system_message="You are a writing assistant, you can use research function to collect latest information about a given topic, and then use write_content function to write a very well written content; Reply TERMINATE when your task is done",
+            llm_config=llm_config_content_assistant, 
+        )
+
+        user_proxy = ExtendedUserProxyAgent(
+            updater = self.ClientUpdator,
+            name="User_proxy",
+            human_input_mode="TERMINATE",
+            function_map={
+                #"write_content": self.write_content,
+                "get_research_information" : lambda **kwargs:  self.get_research_information(**kwargs), 
+            }
+        )  
+        result = user_proxy.initiate_chat(
+            writing_assistant, message= message)#"explain how 3d mesh can be compressed")
+        
+        self.ClientUpdator.ConversationChatResponse("Final response:", result)
+        
+    
+    def get_research_information(self, search_keywords):    
+        data = get_research_informatio2n(self.ClientUpdator, self.Objective, search_keywords)
+        #with open('summerize.txt', 'r', encoding='utf-8') as file: 
+        #    data = file.read()
+        #print(data)
+        return self.write_brief(data, self.Objective)
+
+    def research(self, topic):
+        llm_config_researcher = {
+            "functions": [
+                {
+                    "name": "get_research_information",
+                    "description": "search for recent academic information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "search_keywords": {
+                                "type": "string",
+                                "description": "search keyword for academic research titles",
+                            },
+                            "search_text": {
+                                "type": "string",
+                                "description": "phrase to be used to search in acedemic paper for information",
+                            } 
+                        },
+                        "required": ["search_keywords","search_text"],
+                    }
+                } 
+            ],
+            "config_list": config_list
+        }
+        print("research called")
+        print(topic)
+
+        researcher = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="researcher",
+            system_message="Research about a given query, search to find as much academic information as possible, and generate detailed research article with all reference links attached; Add TERMINATE to the end of the research report;",
+            #"Research about a given query by using the get_research_information function then generate a thorough and comprehensive research report. Ensure to include all citations and sources from the research; Add TERMINATE to the end of the research report;",
+            llm_config=llm_config_researcher,
+        )
+
+        user_proxy = ExtendedUserProxyAgent(
+            updater = self.ClientUpdator,
+            name="User_proxy",
+            code_execution_config={"last_n_messages": 2, "work_dir": "coding"},
+            is_termination_msg=lambda x: x.get("content", "") and x.get(
+                "content", "").rstrip().endswith("TERMINATE"), 
+            human_input_mode="TERMINATE",
+            function_map={ 
+                "get_research_information" : lambda **kwargs:  self.get_research_information(self.ClientUpdator, self.Objective, **kwargs), 
+            }
+        )
+     
+        user_proxy.initiate_chat(researcher, message=topic)
+    
+        user_proxy.stop_reply_at_receive(researcher) 
+        print("RETURNING ")
+        print(user_proxy.last_message()["content"])
+        return user_proxy.last_message()["content"]
+     
+    def write_brief(self, research_material, topic):
+        briefStructure =  { 
+            "Abstract & Background:" :
+            'Collate and summarize the central themes from the collection of papers. Detail the combined primary objectives and any shared background or foundational context. Respond to: "What are the common themes across the papers?", "Why were these studies collectively significant?", and "What foundational knowledge do they build upon?',
+
+
+            "Key Findings" : 
+            'The structure of the content must be using a numbered list or bullet points. Extract and detail the principal outcomes and data points from the set of papers. Emphasize the collective significance of these findings within the broader field. Conclude with overarching takeaways derived from the entire compilation. Ask yourself: "What are the standout results across the papers?", "How do these findings reshape our understanding?", and "What are the shared conclusions from these studies?"',
+            
+        
+            "Implications, Analysis, & Future Directions" : 
+            'Discuss the cumulative effects and implications of the findings from the series of papers. Analyze and compare the results in the context of existing knowledge. Suggest potential next steps or future applications based on the collective insights. Consider: "How do these combined findings impact the larger field?", "Are there contrasting or complementary results?", and "What future research or applications emerge from this collective analysis?"'
+        }
+        
+        structures_done = [] 
+        brief =""
+        for headline, rules in briefStructure.items():
+
+            basePrompt =  f"Write the section {headline} of a brief about {topic}, when writing the content for {headline} section you must follow the rules \n\n {rules} \n\n Here is a compilation of research about the topic.:\n {research_material}"
+            if len(structures_done) > 0:
+                basePrompt += "\n\n Here is the current outline of the brief:\n"
+                for i in range(len(structures_done)): 
+                    title, content = structures_done[i]
+                    basePrompt += content + "\n\n"   
+
+            editor = f"""You are a senior editor of an AI brief generator, you will define the structure of a section in a brief that is under title {headline} post based on material provided by the researcher, and give it to the writer to write the content under {headline}. 
+            Avoid separate headings for each paper. Instead, merge common themes, findings, and conclusions.
+            Always include or find all sources & citations when mentioning a paper, the sources exist in the compilation of research."""
+            
+
+            writer =f"""You are a professional AI brief writer who is writing a brief about {topic} you will write the section {headline} based on the structured provided by the editor.
+            The sub-points are there, but each sub-point is a brief placeholder, like a thought yet to be fleshed out, use the compilation of research material to futher explain the concepts. 
+            Avoid separate headings for each paper. Instead, merge common themes, findings, and conclusions.   Always include or find all sources & citations when mentioning a paper, the sources exist in the compilation of research.
+                Your task:
+                1. Think of the directive as the idea you must address and expand upon in your paragraph
+                2. Keep in mind that this is a brief and the text is for the {headline} section of the brief so it must be packed with information.
+                3. Avoid writing unnecessary filler text but keep details that are essential to the text.
+                4. You must retain the original format and structure that the editor created, including numbering or bullet points.
+                5. Avoid separate headings for each paper. Instead, merge common themes, findings, and conclusions.
+                6. Always include or find all sources & citations when mentioning a paper, the sources exist in the compilation of research."""
+                
+            self.ClientUpdator.FunctionChatResponse("Asking editor creator:" ,  str(str(basePrompt) + "\n" + str(editor)) )
+            response = oai.ChatCompletion.create(
+                model="gpt-3.5-turbo-16k",
+                messages=[ {"role": "system", "content": editor} ,
+                            { "role": "system",   "content": basePrompt} ] ) 
+            
+            section_struct = response['choices'][0]['message']['content']
+            structures_done.append((headline, section_struct))
+            
+            print("="*50) 
+            print(response['choices'][0]['message']['content'])
+            print("="*50) 
+            self.ClientUpdator.ConversationChatResponse("Editor - strcuture creator:", response['choices'][0]['message']['content'])
+
+            self.ClientUpdator.FunctionChatResponse("Asking writer:" ,   str(section_struct)  )  
+            response = oai.ChatCompletion.create(
+                model="gpt-3.5-turbo-16k",
+                messages=[ {"role": "system", "content": writer} , 
+                            {  "role": "user",   "content": str("Structure created by editor:\n\n " + section_struct)},
+                            {  "role": "system",   "content": basePrompt} ] ) 
+            writerResponse = response['choices'][0]['message']['content']
+            print("="*50) 
+            print(response['choices'][0]['message']['content'])
+            print("="*50) 
+            self.ClientUpdator.ConversationChatResponse("Writer:", response['choices'][0]['message']['content'])
+
+            
+            brief += headline + "\n\n" + writerResponse
+            self.ClientUpdator.ConversationChatResponse("Output so far:", brief)
+        exit()
+
+        return brief
+
+    def write_contentG(self, subject, rules, research_material, topic):   
+        self.ClientUpdator.ConversationChatResponse("Function call", "write_content was called")
+        print("write_content called ")
+        print("=" *100)
+        print(research_material)
+        print("=" *100)
+        print(topic)
+
+        llm_config_researcher = {
+            "functions": [
+                {
+                    "name": "Get_Feedback",
+                    "description": "feedback will be provided to the text by experts",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "description": "text that will be given feedback on",
+                            } 
+                        },
+                        "required": ["text" ],
+                    }
+                } 
+            ],
+            "config_list": config_list
+        }
+ 
+        writer = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="writer",
+            system_message="""As The Content Writer, you are the primary creator, synthesizing the research material into clear and coherent content based on the section you've been assigned. 
+            Craft your content while keeping the subject’s rules in mind and be receptive to feedback.\nRules 
+    1. Maintain a clear and organized structure in your writing, facilitating reader comprehension. 
+    2. Be adaptable and willing to revise based on the feedback from feedback  
+    """,
+        llm_config={"config_list": config_list},
+         #  llm_config=llm_config_researcher,
+        ) 
+
+        writer_asistant = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="writer_asistant",
+            system_message="You are an assistant whose main task is to provide constructive feedback to the writer whether content aligns with its section title  "+ subject + """.
+                    Rules:
+                    1. Only provide feedback on what could be improved and not what is good 
+                    2. Do not verify facts. 
+                    3. Only assess theme alignment.
+                    4. Highlight mismatches
+                    5. Dont include the text that you provide feedback for; ONLY THE CONSTRUCTIVE FEEDBACK ITSELF""",
+            max_consecutive_auto_reply=3, llm_config={"config_list": config_list})
+        
+        user_proxy = ExtendedUserProxyAgent(
+            updater = self.ClientUpdator,
+            name="admin",
+            human_input_mode="NEVER",
+            system_message="A human admin, after the feedback has been provided to the writer and if you think the writer dont need any more feedback or otherwrise; add TERMINATE to the end of the message.",
+            code_execution_config=False,
+            llm_config={"config_list": config_list},
+            is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"), 
+        )
+
+    
+        groupchat = ExtendedUserGroupChat(
+            updater = self.ClientUpdator,
+            agents=[user_proxy,writer, writer_asistant, writer],
+            messages=[],
+            max_round=4) 
+        
+        manager = ExtendedUserGroupChatManager(
+            updater = self.ClientUpdator,
+            groupchat=groupchat) 
+
+         
+        user_proxy.initiate_chat(manager, message=f"""Using the research materials below, write the section for {subject} in a brief about {topic}, here are the rules and what should be included in the section:
+                                  {rules} \n  
+                                  Here is the research material \n\n {research_material}""")
+
+        user_proxy.stop_reply_at_receive(manager)
+        user_proxy.send("Give me the section content that just generated again, return ONLY the text, and add TERMINATE in the end of the message", writer)
+
+        print("="*50)
+        print(user_proxy.last_message()["content"])
+        exit() 
+
+
+    def write_conte33333nt3(self, subject, rules, research_material, topic):   
+        self.ClientUpdator.ConversationChatResponse("Function call", "write_content was called")
+        print("write_content called ")
+        print("=" *100)
+        print(research_material)
+        print("=" *100)
+        print(topic)
+
+        llm_config_researcher = {
+            "functions": [
+                {
+                    "name": "Get_Feedback",
+                    "description": "feedback will be provided to the text by experts",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "description": "text that will be given feedback on",
+                            } 
+                        },
+                        "required": ["text" ],
+                    }
+                } 
+            ],
+            "config_list": config_list
+        }
+ 
+        writer = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="writer",
+            system_message="""As The Content Writer, you are the primary creator, synthesizing the research material into clear and coherent content based on the section you've been assigned. 
+            Craft your content while keeping the subject’s rules in mind and be receptive to feedback.
+              Rules 
+    1. Maintain a clear and organized structure in your writing, facilitating reader comprehension. 
+    2. Be adaptable and willing to revise based on the feedback from feedback 
+    """,
+        #llm_config={"config_list": config_list},
+           llm_config=llm_config_researcher,
+        ) 
+
+         
+        user_proxy = ExtendedUserProxyAgent(
+                    updater = self.ClientUpdator,
+                    name="admin", 
+                    system_message="A human admin, after the feedback has been provided to the writer atleast once and if you think the writer dont need any more feedback or otherwrise; add TERMINATE to the end of the message.",
+                    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
+                    human_input_mode="TERMINATE",
+                    llm_config={"config_list": config_list},
+                    function_map={ 
+                        "Get_Feedback" : lambda **kwargs:  self.Get_Feedback(research_material,  subject, topic, **kwargs), 
+                    } 
+                )
+         
+        user_proxy.initiate_chat(writer, message=f"""Using the research materials below, write the section for {subject} in a brief about {topic}, here are the rules and what should be included in the section:
+                                  {rules} \n  
+                                  Here is the research material \n\n {research_material}""")
+
+        user_proxy.stop_reply_at_receive(user_proxy)
+        user_proxy.send("Give me the section content that just generated again, return ONLY the text, and add TERMINATE in the end of the message", writer)
+
+        print("="*50)
+        print(user_proxy.last_message()["content"])
+        exit() 
+ 
+    def write_content(self, subject, rules, research_material, topic):   
+        editor = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="editor",
+            system_message=f"You are a senior editor of an AI brief generator, you will define the structure of a section in a brief that is under title {subject} post based on material provided by the researcher, and give it to the writer to write the content under {subject}",
+            llm_config={"config_list": config_list},
+        )
+
+        writer = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="writer",
+            system_message=f"You are a professional AI brief writer who is writing a brief post about {topic} you will write the section {subject} based on the structured provided by the editor, and feedback from reviewer; After 2 rounds of content iteration, add TERMINATE to the end of the message",
+            llm_config={"config_list": config_list},
+        )
+
+        reviewer = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="reviewer",
+            system_message=f"You are a world class hash tech brief content critic, you will review & critic the written brief section titled {subject} and provide feedback to writer.After 2 rounds of content iteration, add TERMINATE to the end of the message",
+            llm_config={"config_list": config_list},
+        )
+
+        user_proxy = ExtendedUserProxyAgent(
+            updater = self.ClientUpdator,
+            name="admin",
+            system_message="A human admin. Interact with editor to discuss the structure. Actual writing needs to be approved by this admin.",
+            code_execution_config=False,
+            is_termination_msg=lambda x: x.get("content", "") and x.get(
+                "content", "").rstrip().endswith("TERMINATE"),
+            human_input_mode="TERMINATE",
+        )
+
+        groupchat =  ExtendedUserGroupChat(
+            updater = self.ClientUpdator,
+            agents=[user_proxy, editor, writer, reviewer],
+            messages=[],
+            max_round=6)
+        manager =  ExtendedUserGroupChatManager( updater = self.ClientUpdator,groupchat=groupchat)
+
+        user_proxy.initiate_chat(
+            manager, message=f"Write the section {subject} of a brief about {topic}, here are the material: {research_material}")
+
+        user_proxy.stop_reply_at_receive(manager)
+        
+        user_proxy.send(
+            f"Give me the section {subject} that just generated again, return ONLY the section {subject} of the brief, and add TERMINATE in the end of the message", manager)
+     
+        # return the last message the expert received
+        return user_proxy.last_message()["content"]
+    
+    def Get_Feedback(self,research_material, subject, topic, text):     
+        prompts = [ "You are an assistant whose main task is to provide constructive feedback on whether content aligns with its section title  "+ subject + """.
+                    Rules:
+                    1. Only provide feedback on what could be improved and not what is good 
+                    2. Do not verify facts. 
+                    3. Only assess theme alignment.
+                    4. Highlight mismatches
+                    5. Dont include the text that you provide feedback for; ONLY THE CONSTRUCTIVE FEEDBACK ITSELF""", 
+                    "You are an assistant whose primary role is to give constructive feedback on text clarity and flow. Rules: 1. Only provide feedback on what could be improved and not what is good  2. Focus on sentence structure. 3. Highlight and explain confusing parts. 4. Suggest improvements for better readability. 5. Dont include the text that you provide feedback for; ONLY THE CONSTRUCTIVE FEEDBACK ITSELF",]
+ 
+        feedback ="" 
+        baseprompt =  f"""Povide feedback for the text below that is used to write a section for in a brief for the title {subject} that is about {topic} \n\nHere is the Text that you need to provide feedback on: \n\n{text}"""
+        for prompt in prompts:
+            response = oai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[ {"role": "system", "content": prompt} ,
+                          {
+                              "role": "system", 
+                              "content": baseprompt} ] )
+            print(response)
+            feedback += response['choices'][0]['message']['content'] +"\n\n"  
+            print("="*50)
+            print("="*50)
+            print(response['choices'][0]['message']['content'])
+            print("="*50)
+            print("="*50)
+            self.ClientUpdator.FunctionChatResponse("Feedback:", response['choices'][0]['message']['content'])
+
+  
+        return feedback
+
+
+    def Get_Feedback2(self,research_material, subject, topic, text):   
+        assistant = ExtendedAssistantAgent(
+            updater = self.ClientUpdator,
+            name="feedback_provider",
+             system_message=""""Does the content match the section's title (Key Findings, Challenges, or Future Directions)? Provide feedback.
+
+Rules
+
+    Do not verify facts.
+    Check if content type (e.g., results, problems, next steps) aligns with section title.
+    Point out areas that stray from section's theme.""",
+            max_consecutive_auto_reply=3, llm_config={"config_list": config_list},)
+  
+
+        Relevance_Checker = ExtendedAssistantAgent(
+                    updater = self.ClientUpdator,
+                    name="Relevance_Checker",
+                    system_message="You are an assistant whose main task is to provide constructive feedback on whether content aligns with its section title  "+ subject + """.
+                    Rules:
+                    1. Only provide feedback on what could be improved and not what is good 
+                    2. Do not verify facts. 
+                    3. Only assess theme alignment.
+                    4. Highlight mismatches
+                    5. Dont include the text that you provide feedback for; ONLY THE CONSTRUCTIVE FEEDBACK ITSELF""",
+                    llm_config={"config_list": config_list},
+                )
+        
+        
+        Style_Guide = ExtendedAssistantAgent(
+                    updater = self.ClientUpdator,
+                    name="Style_Guide", 
+                    system_message="You are an assistant whose primary role is to give constructive feedback on text clarity and flow. Rules: 1. Only provide feedback on what could be improved and not what is good  2. Focus on sentence structure. 3. Highlight and explain confusing parts. 4. Suggest improvements for better readability. 5. Dont include the text that you provide feedback for; ONLY THE CONSTRUCTIVE FEEDBACK ITSELF",
+                    llm_config={"config_list": config_list},
+                )
+ 
+
+        user_proxy = ExtendedUserProxyAgent(
+            updater = self.ClientUpdator,
+            name="admin",
+            human_input_mode="NEVER",
+            system_message="A human admin. After all roles have been given constructive feedback; add TERMINATE to the end of the message.",
+            code_execution_config=False,
+            is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"), 
+        )
+
+    
+        groupchat = ExtendedUserGroupChat(
+            updater = self.ClientUpdator,
+            agents=[user_proxy, Relevance_Checker, Style_Guide],
+            messages=[],
+            max_round=4) 
+        
+        manager = ExtendedUserGroupChatManager(
+            updater = self.ClientUpdator,
+            groupchat=groupchat) 
+
+        
+        message=f"""Povide feedback for the text below that is used to write a section for in a brief for the title {subject} that is about {topic},   
+Here is the Text that you need to provide feedback on: \n\n{text}"""
+        user_proxy.initiate_chat(manager, message=message)  
+
+        user_proxy.stop_reply_at_receive(manager)
+        user_proxy.send("Restate all the feedback that has been giving in the converstation return ONLY the feedback; add TERMINATE to the end of the message.", manager)
+        
+        messages =  user_proxy.last_message()["content"] 
+        print(messages)
+        return messages

@@ -1,0 +1,93 @@
+
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+Chapter 2. Background and State-of-the-Art
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+2.1 Background
+2.1.1 Types of Malware
+- Backdoor: Allows attacker to access and execute commands.
+- Bot: Enables control of compromised system remotely.
+- Botnet: Group of interconnected bots controlled by a botmaster.
+- Downloader: Downloads and installs additional malware components.
+- Ransomware: Locks victim's screen and encrypts files, demanding ransom.
+- Rootkit: Modifies operating system for attacker privilege.
+- Spyware: Retrieves sensitive data and sends them to the attacker.
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+2.1.2 Malware Obfuscation Techniques
+- Techniques such as packing, encryption, polymorphism, and metamorphism used to avoid detection from antivirus products.
+- Packing: Uses compression to obfuscate executable file.
+- Encryption: Uses encryption instead of compression, requiring a decryption module.
+- Polymorphism: Uses encryption and morphs the decryptor module to avoid detection.
+- Metamorphism: Changes internal structure while maintaining original functionality.
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+2.1.3 Malware Analysis
+- Malware analysis provides information for classification or clustering problems.
+- Static analysis: Searches for structure information of a file.
+- Dynamic analysis: Examines executed program in real or virtual environment.
+- Static analysis captures incomplete behavior, but dynamic analysis is time-consuming.
+- Hybrid analysis combines static and dynamic analysis.
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+2.1.4 Features for Malware Detection
+- Various representations of programs can be analyzed.
+- Features include byte sequences, API and system calls, opcodes, PE file characteristics, strings, entropy, image, and instruction traces.
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+2.2 Previous Results and Related Work
+- Applied machine learning techniques to malware detection using static analysis.
+- Schulz et al. used data mining for detecting unknown malware, achieving higher detection rates than signature-based methods.
+- Kolter and Maloof used overlapping byte sequences and various classifiers, achieving high accuracy with boosted decision tree model.
+- Recent works include Wadkar et al., Yang and Liu, and others using static analysis and machine learning algorithms to improve detection accuracy.
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+Our work focuses on an automatic malware detection framework based on machine learning algorithms. We propose various static malware detection systems for the Windows operating system. The primary goal is to distinguish between malware and benign software, while also aiming to detect as much malware as possible with a low false positive rate. We propose using ensemble classifiers, recurrent neural networks, and distance metric learning techniques for malware detection. Our proposed systems are automatic in the sense that feature extraction, preprocessing, training, and evaluating the detection model can be automated. However, antivirus programs rely on more complex systems that involve malware analysts and researchers. The proposed systems are not able to automatically adapt to detect the newest malware, but this can be addressed by running the systems again with the newest malware included in the training set. Our work focuses on static analysis for malware detection and discusses the advantages and drawbacks in comparison to dynamic analysis. Static analysis plays a crucial role and is used as one component of a complex detection system [Jureček, 2021].
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+Machine learning algorithms have become popular for malware detection due to the increasing number of malware samples. Antivirus vendors rely on databases of signatures to identify known malware, but signature-based detection is ineffective against obfuscated and zero-day malware. The goal is to build a machine learning framework that can detect malware with minimal error rate and a low false positive rate. Distance metric learning and deep learning techniques have been explored for malware detection and classification of malware families. The automation of the malware detection process is also a major focus. The choice of machine learning algorithm depends on the extracted features and their representation. Different types of malware, such as backdoors, bots, downloaders, and ransomware, pose unique challenges for malware detection [Jureček, 2021].
+
+This information is from the paper Automatic Malware Detection (2021-09-06T01:00:00):
+1. Jureček, M. (2021). Automatic Malware Detection. Doctoral Dissertation, Czech Technical University in Prague. Retrieved from [insert source here].
+
+
+
+
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+In contemporary literature, there has been a focus on malware detection strategies using machine learning. Traditional strategies that rely on signatures are limited in their ability to detect unknown malwares. Machine learning models, on the other hand, have the capability to learn from the behavioral patterns of existing malwares and can identify similar behavioral patterns in unknown malwares. These strategies have been successful in detecting unknown malwares. Several approaches have been explored in the literature:
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Anderson et al. [49] proposed a malware detection strategy that uses graphs and graph kernels to assess the similarity between known and unknown malware call sequences. Support vector machines are then used to classify the input call sequences.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Bayer et al. [50] introduced a technique that utilizes Locality Sensitivity Hashing (LSH) to cluster call sequences generated by Anubis. The behavior of the call sequences is considered in the clustering process.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Biley et al. [53] developed a classification strategy based on observed changes in system state. The behavior of malwares is prototyped and malwares are classified based on these behavior prototypes using a distance metric called "normalized compression distance (NCD)".
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Park et al. [54] defined a classification strategy based on graph similarities between confirmed malware call sequence graphs and unknown call sequence graphs. The malwares that control system privileges without initiating system call sequences are not traceable using this model.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Firdausi et al. [55] proposed a machine learning model for malware detection that learns from the behavioral patterns of malware samples given for training. The model uses various benchmark classifiers, including J48, multilayer perception neural networks, Naïve Bayes, Support Vector Machine, and k-Nearest Neighbors, to classify input malware samples.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Nari et al. [56] developed a network flow behavioral analysis framework for malware detection. The framework extracts network flows from PCAP files and draws network activity representation graphs from these flows. The features extracted from the graphs are then used to classify malware samples using the J48 classifier.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Lee et al. [58] explored a machine learning based malware clustering approach that uses behavioral profiles of malware samples to cluster them based on the system resources invoked by system calls. The approach combines static and dynamic clustering strategies.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Santos et al. [59] devised a hybrid approach for malware detection that tracks known features (static features) through the analysis of the sequence of operational codes in malicious executables and unknown features (dynamic features) observed from exceptions and operations in system calls.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Islam et al. [60] also employed a hybrid approach for malware classification using static and dynamic features. Various classifiers, including Support Vector Machine, Decision Tree, and Random Forest, were used to classify the executables into malevolent or benevolent, with Random Forest achieving the highest accuracy.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+- Anderson et al. [61] developed a classification model that uses multiple input sources, including control flow graphs, static call sequences, portioned executables, dynamic call sequences, and file signatures. The model learns the weights of these input combinations from a training set and uses them to classify executables during testing.
+
+This information is from the paper Review of Contemporary Literature on Machine Learning based Malware Analysis and Detection Strategies (2016-03-11T00:00:00):
+Overall, the machine learning based models that learn from anomalies or call sequences have shown promise in overcoming the limitations of signature-based malware detection strategies. However, challenges remain in handling the dynamic and diverse network data in the current era of internet and computer system usage. Further research is required to address these challenges. [1][2][3][4][5][6][8][10][12][13][15][19][20][21][22][23][29][30][31][32][33][34][35][36][37][38][39][40][41][42][43][44][45][46][47][48][49][50][51][52][53][54][55][56][57][58][59][60][61]
+

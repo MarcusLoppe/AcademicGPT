@@ -1,0 +1,36 @@
+{
+  "name": "autogen-researcher",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": { 
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "antd": "^5.10.1",
+    "bufferutil": "^4.0.8",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^10.16.4",
+    "html-react-parser": "^5.0.6",
+    "jszip": "^3.10.1",
+    "next": "13.5.5",
+    "react": "^18",
+    "react-chat-elements": "^12.0.10",
+    "react-dom": "^18",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
+    "utf-8-validate": "^5.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "13.5.5",
+    "typescript": "^5"
+  }
+}

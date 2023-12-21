@@ -1,0 +1,12 @@
+chromadb==0.4.17
+Flask==3.0.0
+Flask_SocketIO==5.3.6
+langchain==0.0.352
+numpy==1.26.2
+openai==0.28.1
+pyautogen==0.1.8
+python_dateutil==2.8.2
+Requests==2.31.0
+tiktoken==0.5.1
+torch==2.1.0+cu121
+transformers==4.34.0
