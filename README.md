@@ -11,19 +11,9 @@ Using the free Core APICore API ([Core API](https://core.ac.uk/services/api)) yo
 This project contains a **React front-end** which is and a **python backend** which handles all the queries and processing. 
 
 The purpose of the project was to improve my React skills and understand how to implement vector databases. The React code is descent but as a mainly C# dev the python code doesn't always follow the python practices. 
-
-<table> 
-  <tr>
-    <td ><center>
-     <image  src="assets/QA.png"> 
-    </center></td> 
-  </tr> 
-  <tr>
-    <td ><center>
-      <p>Sourced & detailed response from the Agent</p>
-    </center></td> 
-  </tr> 
-</table>
+ 
+ ![Alt Text](assets/QA.png) 
+ *Sourced & detailed response from the Agent* 
 
 
 ## Table of Contents
