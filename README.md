@@ -102,9 +102,12 @@ API_KEY = "XXX"
   ```
 
 ## Demonstration
-
-![Overview](assets/overview.gif)
+ 
   
+
+https://github.com/MarcusLoppe/AcademicGPT/assets/65302107/bb3af9a1-2cd6-4c56-9d33-10ec43924fbf
+
+
 
 <center>
 <table>
