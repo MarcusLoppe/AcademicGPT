@@ -113,23 +113,14 @@ Format example:
         response = request['choices'][0]['message']['content'] 
         
         self.ClientUpdator.ReportSuccess("Got response from ChatGPT about topics!")
-        print(response)
-        keys_string = "" 
-        areas = [] 
+        print(response) 
         ret = [] 
-        responseJson = json.loads(response)  
-            
-        print("responseJson")
-        print(responseJson)
-        list_key = next(iter(responseJson)) 
-        print(f"List key {list_key}")
+        responseJson = json.loads(response)   
+        list_key = next(iter(responseJson))  
         
         for area_dict in responseJson[list_key]:  # Iterate over the list
-            for key, value in area_dict.items(): 
-                print(str(key) + " : " + str(value))
-                areas.append({"subArea":key, "keywords": key + "\n" + value})
-                ret.append({  key : value})
-                keys_string += key + "\n" + value+ "\n" 
+            for key, value in area_dict.items():  
+                ret.append({  key : value}) 
                  
         return ret
                
